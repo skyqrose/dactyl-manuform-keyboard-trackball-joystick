@@ -1,7 +1,7 @@
 # The Dactyl-ManuForm Keyboard
 This is a fork of the [Dactyl](https://github.com/adereth/dactyl-keyboard), a parameterized, split-hand, concave, columnar, ergonomic keyboard.
 
-![Imgur](http://i.imgur.com/LdjEhrR.jpg)
+<img src="http://i.imgur.com/LdjEhrR.jpg" width="512"/>
 
 The main change is that the thumb cluster was adapted from the [ManuForm keyboard](https://github.com/jeffgran/ManuForm) ([geekhack](https://geekhack.org/index.php?topic=46015.0)). The walls were changed to just drop to the floor. The keyboard is paramaterized to allow adjusting the following: 
 
@@ -14,29 +14,41 @@ The main change is that the thumb cluster was adapted from the [ManuForm keyboar
 * Column offsets
 * Height
 
-I built a 4x5 version (40% size) for myself. The default has a bit more tenting than the Dactyl. See the following model files for configurations that may be most common:
+The default has a bit more tenting than the Dactyl.
 
-* [40% size, (4x5)](https://github.com/tshort/dactyl-keyboard/blob/master/things/right-4x5.stl)
-* [60% size, (5x6)](https://github.com/tshort/dactyl-keyboard/blob/master/things/right-5x6.stl)
+Models ready for 3d printing of the most common configurations are available in the [things/](things/) directory (4x5, 4x6, 5x6, and 6x6).
 
-## Changes from the original Dactyl-ManuForm
+## Changes from [tshorts Dactyl-ManuForm](https://github.com/tshort/dactyl-keyboard)
 
-* Removed the side-nubs to make the case compatible with Kailh (and similar switches) that don't have the notch
+* Removed the side-nubs in the switch holes to make the case compatible with Kailh (and similar switches) that don't have the notch for the nubs
 * Removed the teensy holder and wire posts, since they supposedly increase printing time by a lot (and I don't have any use for them)
 * Included screw hole-, rj9 connector-, and usb hole-fixes as suggested by [jmg123 over at Geekhack](https://geekhack.org/index.php?topic=88576.msg2578041#msg2578041)
 
 The `things/*.stl`-files have **not** been updated (yet), so you have to follow the procedure below to generate the new files. I will update this at a later stage.
 
-## Assembly
+# Assembly
 
-### Generating a Design
+* Pregenerated STL files are available in the [things/](things/) directory, so just use those if you want any of the default configurations (4x5, 4x6, 5x6, and 6x6).
 
-**Setting up the Clojure environment**
+### Generating a custom model
+
+#### Setting up the Clojure environment
 * [Install the Clojure runtime](https://clojure.org)
 * [Install the Leiningen project manager](http://leiningen.org/)
 * [Install OpenSCAD](http://www.openscad.org/)
 
-**Generating the design**
+On Debian-based **Linux distributions** you can set up the environment with a couple of commands
+* Install Java version 8 if you do not have it
+* * `apt-get install openjdk-8-jre`
+* Download the [lein script](https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein)
+* Place it on your $PATH where your shell can find it (eg. ~/bin)
+* Set it to be executable (`chmod a+x ~/bin/lein`)
+* Run `lein` once and it will download the self-install package
+* Install OpenSCAD
+* * `apt-get install openscad`
+
+#### Generating the design
+* Open a command window/terminal in the `dactyl-manuform-keyboard` directory
 * Run `lein repl`
 * Load the file `(load-file "src/dactyl_keyboard/dactyl.clj")`
 * This will regenerate the `things/*.scad` files
@@ -44,10 +56,9 @@ The `things/*.stl`-files have **not** been updated (yet), so you have to follow 
 * Make changes to design, repeat `load-file`, OpenSCAD will watch for changes and rerender.
 * When done, use OpenSCAD to export STL files
 
-**Tips**
+#### Tips
 * [Some other ways to evaluate the clojure design file](http://stackoverflow.com/a/28213489)
 * [Example designing with clojure](http://adereth.github.io/blog/2014/04/09/3d-printing-with-clojure/)
-
 
 ### Printing
 Pregenerated STL files are available in the [things/](things/) directory. 
@@ -63,10 +74,6 @@ Even if it successfully prints, warping can cause problems.
 On one print, the RJ-9 holder was squished, so I had to cut down my connector to fit.
 
 If printed at Shapeways or other professional shops, I would not expect such problems. 
-
-### Thingiverse
-
-[The 4x5 STL left/right pair](https://www.thingiverse.com/thing:2349390) from the [things/](things/) directory is in the thingiverse for public printing
 
 ### Wiring
 
@@ -88,7 +95,7 @@ I wired one half using the traditional approach of using the legs of a diode to 
 For this side, I used magnet wire to wire columns. That worked okay. 
 The magnet wire is small enough, it wants to move around, and it's hard to tell if you have a good connection.
 
-![Imgur](http://i.imgur.com/7kPvSgg.jpg)
+<img src="http://i.imgur.com/7kPvSgg.jpg" width="512"/>
 
 For another half, I used stripboard for the row connections. 
 This allowed me to presolder all of the diodes. 
@@ -100,7 +107,7 @@ This worked a bit better than the magnet wire for me.
 For a future version, I may try just bare tinned copper wire for columns (something like #20). 
 With the stripboard, it's pretty easy keeping row and column connections separate.
 
-![Imgur](http://i.imgur.com/JOm5ElP.jpg)
+<img src="http://i.imgur.com/JOm5ElP.jpg" width="512"/>
 
 Note that a telephone handset cable has leads that are reversed, so take this into account when connecting these leads to the controller.
 
@@ -112,7 +119,7 @@ If wires aren't dangling, a bottom plate may not be needed.
 You need something on the bottom to keep the keyboard from sliding around. 
 Without a plate, you could use a rubber pad, or you could dip the bottom of the keyboard in PlastiDip.
 
-For more photos of the first complete wiring of v0.4, see [Imgur](http://imgur.com/a/v9eIO).
+For more photos of the first complete wiring of v0.4, see [here](http://imgur.com/a/v9eIO).
 
 This is how the rows/columns wire to the keys and the ProMicro
 ![Wire Diagram](https://docs.google.com/drawings/d/1s9aAg5bXBrhtb6Xw-sGOQQEndRNOqpBRyUyHkgpnSps/pub?w=1176&h=621)
@@ -122,9 +129,9 @@ This is how the rows/columns wire to the keys and the ProMicro
 
 NOTE: you also make sure the firmware is set up correctly (ex: change row pins with col pins)
 
-![Left Wire Diagram](/resources/dactyl_manuform_left_wire_diagram.png)
+<img src="/resources/dactyl_manuform_left_wire_diagram.png" width="512"/>
 
-![Left Wire Diagram](/resources/dactyl_manuform_right_wire_diagram.png)
+<img src="/resources/dactyl_manuform_right_wire_diagram.png" width="512"/>
 
 
 ### Firmware
@@ -134,7 +141,7 @@ I adapted the QMK firmware [here](https://github.com/tshort/qmk_firmware/tree/ma
 This allows each side to work separately or together. 
 This site also shows connections for the Arduino Pro Micro controllers.
 
-## License
+# License
 
 Copyright © 2015-2017 Matthew Adereth and Tom Short
 
