@@ -18,7 +18,7 @@ The default has a bit more tenting than the Dactyl.
 
 Models ready for 3d printing of the most common configurations are available in the [things/](things/) directory (4x5, 4x6, 5x6, and 6x6).
 
-## Changes from [tshorts Dactyl-ManuForm](https://github.com/tshort/dactyl-keyboard)
+## Changes from [tshort/Dactyl-ManuForm](https://github.com/tshort/dactyl-keyboard)
 
 * Removed the side-nubs in the switch holes to make the case compatible with Kailh (and similar switches) that don't have the notch for the nubs
 * Removed the teensy holder and wire posts, since they supposedly increase printing time by a lot (and I don't have any use for them)
