@@ -19,6 +19,13 @@ I built a 4x5 version (40% size) for myself. The default has a bit more tenting 
 * [40% size, (4x5)](https://github.com/tshort/dactyl-keyboard/blob/master/things/right-4x5.stl)
 * [60% size, (5x6)](https://github.com/tshort/dactyl-keyboard/blob/master/things/right-5x6.stl)
 
+## Changes from the original Dactyl-ManuForm
+
+* Removed the side-nubs to make the case compatible with Kailh (and similar switches) that don't have the notch
+* Removed the teensy holder and wire posts, since they supposedly increase printing time by a lot (and I don't have any use for them)
+* Included screw hole-, rj9 connector-, and usb hole-fixes as suggested by [jmg123 over at Geekhack](https://geekhack.org/index.php?topic=88576.msg2578041#msg2578041)
+
+The `things/*.stl`-files have **not** been updated (yet), so you have to follow the procedure below to generate the new files. I will update this at a later stage.
 
 ## Assembly
 
