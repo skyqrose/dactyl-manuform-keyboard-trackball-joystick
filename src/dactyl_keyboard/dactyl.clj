@@ -555,12 +555,11 @@
 
 (def rj9-start  (map + [0 -3  0] (key-position 0 0 (map + (wall-locate3 0 1) [0 (/ mount-height  2) 0]))))
 (def rj9-position  [(first rj9-start) (second rj9-start) 11])
-(def rj9-cube   (cube 14.78 13 22.38))
-(def rj9-space  (translate rj9-position rj9-cube))
-(def rj9-holder (translate rj9-position
-                  (difference rj9-cube
-                              (union (translate [0 2 0] (cube 10.78  10 18.38))
-                                     (translate [0 -0.01 5] (cube 10.78 14  5))))))
+(def rj9-shell (translate rj9-position (cube 14.78 13 22.38)))
+(def rj9-void (translate rj9-position (union
+   (translate [0 2 0] (cube 10.78  10 18.38))
+   (translate [0 -0.01 5] (cube 10.78 14  5))
+)))
 
 (defn screw-insert-shape [bottom-radius top-radius height]
    (union (translate [0 0 (/ height 2)] (cylinder [bottom-radius top-radius] height))
@@ -603,11 +602,11 @@
       thumb-connectors
       case-walls
       screw-insert-shells
-      rj9-space
-      rj9-holder
+      rj9-shell
       ; thumbcaps
       ; caps
     )
+    rj9-void
     screw-insert-voids
     (translate [0 0 -20] (cube 350 350 40))
   )
@@ -618,7 +617,7 @@
     (difference
       (union
         case-walls
-        rj9-holder
+        rj9-shell
         screw-insert-shells
       )
       (translate [0 0 -10] screw-plate-holes)
