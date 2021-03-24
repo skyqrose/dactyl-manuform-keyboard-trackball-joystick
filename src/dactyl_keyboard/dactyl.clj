@@ -585,11 +585,13 @@
                               (union (translate [0 2 0] (cube 10.78  10 18.38))
                                      (translate [0 -0.01 5] (cube 10.78 14  5))))))
 
-(defn screw-insert-shape [bottom-radius top-radius height] 
-   (union (cylinder [bottom-radius top-radius] height)
-          (translate [0 0 (/ height 2)] (sphere top-radius))))
-
-(defn screw-insert [column row bottom-radius top-radius height] 
+(defn screw-insert-shape [bottom-radius top-radius height]
+   (union (translate [0 0 (/ height 2)] (cylinder [bottom-radius top-radius] height))
+          (translate [0 0 height] (sphere top-radius))))
+(def screw-insert-void (screw-insert-shape (/ 5.31 2) (/ 5.1 2) 3.8))
+(def screw-insert-shell (screw-insert-shape 4.255 4.15 5.3))
+(def screw-plate-hole (screw-insert-shape 1.7 1.7 350))
+(defn screw-position [column row]
   (let [shift-right   (= column lastcol)
         shift-left    (= column 0)
         shift-up      (and (not (or shift-right shift-left)) (= row 0))
@@ -598,75 +600,63 @@
                        (if shift-down  (key-position column row (map - (wall-locate2  0 -1) [0 (/ mount-height 2) 0]))
                         (if shift-left (map + (left-key-position row 0) (wall-locate3 -1 0)) 
                                        (key-position column row (map + (wall-locate2  1  0) [(/ mount-width 2) 0 0])))))
-        ]
-    (->> (screw-insert-shape bottom-radius top-radius height)
-         (translate [(first position) (second position) (/ height 2)])
-    )))
+        ] position))
+(def screw-positions [
+  (screw-position 0 0)
+  (screw-position 0 lastrow)
+  (screw-position 2 (+ lastrow 0.3))
+  (screw-position 3 0)
+  (screw-position lastcol 1)
+])
+(defn copy-to-positions [positions shape]
+  (->> positions
+       (map (fn [position]
+              (translate [(first position) (second position) 0] shape)))
+       union))
+(def screw-insert-voids (copy-to-positions screw-positions screw-insert-void))
+(def screw-insert-shells (copy-to-positions screw-positions screw-insert-shell))
+(def screw-plate-holes (copy-to-positions screw-positions screw-plate-hole))
 
-(defn screw-insert-all-shapes [bottom-radius top-radius height]
-  (union (screw-insert 0 0         bottom-radius top-radius height)
-         (screw-insert 0 lastrow   bottom-radius top-radius height)
-         (screw-insert 2 (+ lastrow 0.3)  bottom-radius top-radius height)
-         (screw-insert 3 0         bottom-radius top-radius height)
-         (screw-insert lastcol 1   bottom-radius top-radius height)
-         ))
-(def screw-insert-height 3.8)
-(def screw-insert-bottom-radius (/ 5.31 2))
-(def screw-insert-top-radius (/ 5.1 2))
-(def screw-insert-holes  (screw-insert-all-shapes screw-insert-bottom-radius screw-insert-top-radius screw-insert-height))
-(def screw-insert-outers (screw-insert-all-shapes (+ screw-insert-bottom-radius 1.6) (+ screw-insert-top-radius 1.6) (+ screw-insert-height 1.5)))
-(def screw-insert-screw-holes  (screw-insert-all-shapes 1.7 1.7 350))
+(def model-right
+  (difference
+    (union
+      key-holes
+      connectors
+      thumb
+      thumb-connectors
+      case-walls
+      screw-insert-shells
+      rj9-space
+      rj9-holder
+      ; thumbcaps
+      ; caps
+    )
+    screw-insert-voids
+    (translate [0 0 -20] (cube 350 350 40))
+  )
+)
 
-(def model-right (difference 
-                   (union
-                    key-holes
-                    connectors
-                    thumb
-                    thumb-connectors
-                    (difference (union case-walls 
-                                       screw-insert-outers 
-                                rj9-space 
-                                (translate [0 0 -0.01] screw-insert-holes) )
-                    rj9-holder
-                    ; thumbcaps
-                    ; caps
-                    )
-                   (translate [0 0 -20] (cube 350 350 40)) 
-                  ))
+(def model-right-plate
+  (->>
+    (difference
+      (union
+        case-walls
+        rj9-holder
+        screw-insert-shells
+      )
+      (translate [0 0 -10] screw-plate-holes)
+    )
+    (translate [0 0 -0.1])
+    cut
+  ))
 
 (spit "things/test.scad"
       (write-scad rj9-holder))
 
 (spit "things/right.scad"
       (write-scad model-right))
- 
-(spit "things/left.scad"
-      (write-scad (mirror [-1 0 0] model-right)))
-                  
-(spit "things/right-test.scad"
-      (write-scad 
-                   (union
-                    key-holes
-                    connectors
-                    thumb
-                    thumb-connectors
-                    case-walls 
-                    thumbcaps
-                    caps
-                    rj9-holder
-                    ;             screw-insert-outers 
-                    ;             rj9-space 
-                  )))
 
 (spit "things/right-plate.scad"
-      (write-scad 
-                   (cut
-                     (translate [0 0 -0.1]
-                       (difference (union case-walls
-                                          rj9-holder
-                                          screw-insert-outers)
-                                   (translate [0 0 -10] screw-insert-screw-holes))
-                  ))))
-
+      (write-scad model-right-plate))
 
 (defn -main [dum] 1)  ; dummy to make it easier to batch
