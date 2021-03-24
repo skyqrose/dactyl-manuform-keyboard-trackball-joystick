@@ -72,20 +72,38 @@
 (def mount-width (+ keyswitch-width 3))
 (def mount-height (+ keyswitch-height 3))
 
-(def single-plate
+(def kailh-socket-thickness 3.5)
+
+(defn single-plate [is-left-side]
   (let [top-wall (->> (cube (+ keyswitch-width 3) 1.5 plate-thickness)
                       (translate [0
                                   (+ (/ 1.5 2) (/ keyswitch-height 2))
                                   (/ plate-thickness 2)]))
-        left-wall (->> (cube 1.5 (+ keyswitch-height 3) plate-thickness)
+        left-wall (->> (cube 2 (+ keyswitch-height 3) plate-thickness)
                        (translate [(+ (/ 1.5 2) (/ keyswitch-width 2))
                                    0
                                    (/ plate-thickness 2)]))
-        plate-half (union top-wall left-wall)]
+        kailh-cutout (->> (cube (/ keyswitch-width 3) 1.6 (+ plate-thickness 1))
+                          (translate [0
+                                  (+ (/ 1.5 2) (+ (/ keyswitch-height 2)))
+                                  (/ plate-thickness)]))
+        kailh-socket-cradle
+                                (union
+                                    (->>  (cube (+ keyswitch-width 3.5) 1.5 2.875)
+                                          (translate [0
+                                                    (- (+ (/ 1.5 2) (/ keyswitch-height 2)))
+                                                    (- 0.9375)]))
+                                    (->>  (cube 3 5.5 1.25)
+                                          (translate [0.5 (- 5.85) (- 1.75)])))
+        plate-half (union (difference top-wall kailh-cutout) left-wall)]
     (union plate-half
            (->> plate-half
                 (mirror [1 0 0])
-                (mirror [0 1 0])))))
+                (mirror [0 1 0]))
+          (->> kailh-socket-cradle
+                (mirror [(if is-left-side 1 0) 0 0]))
+    )))
+
 
 ;;;;;;;;;;;;;;;;
 ;; SA Keycaps ;;
@@ -205,13 +223,13 @@
   (apply-key-geometry (partial map +) rotate-around-x rotate-around-y column row position))
 
 
-(def key-holes
+(defn key-holes [is-left-side]
   (apply union
          (for [column columns
                row rows
                :when (or (.contains [2 3] column)
                          (not= row lastrow))]
-           (->> single-plate
+           (->> (single-plate is-left-side)
                 (key-place column row)))))
 
 (def caps
@@ -365,10 +383,10 @@
    (thumb-15x-layout (rotate (/ π 2) [0 0 1] (sa-cap 1.5)))))
 
 
-(def thumb
+(defn thumb [is-left-side]
   (union
-   (thumb-1x-layout single-plate)
-   (thumb-15x-layout single-plate)
+   (thumb-1x-layout (single-plate is-left-side))
+   (thumb-15x-layout (single-plate is-left-side))
    (thumb-15x-layout larger-plate)
    ))
 
@@ -620,9 +638,9 @@
 (def model-right
   (difference
     (union
-      key-holes
+      (key-holes false)
       connectors
-      thumb
+      (thumb false)
       thumb-connectors
       case-walls
       screw-insert-shells
