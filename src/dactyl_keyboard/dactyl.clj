@@ -651,19 +651,27 @@ need to adjust for difference for thumb-z only"
   )
 )
 
-(def model-right-plate
-  (->>
-    (difference
-      (union
-        case-walls
-        rj9-shell
-        screw-insert-shells
+(def bottom-plate-thickness 3)
+(def bottom-plate
+  (let
+    [
+      bottom-outline (cut (translate [0 0 -0.1] case-walls))
+      inner-thing (->>
+        (union
+          (extrude-linear {:height 99 :scale  0.1 :center true} bottom-outline)
+          (cube 50 50 bottom-plate-thickness)
+        )
+        project
+        (translate [0 0 -0.1])
       )
-      (translate [0 0 -10] screw-plate-holes)
+      bottom-plate-blank (extrude-linear {:height bottom-plate-thickness} inner-thing)
+    ]
+    (difference
+      bottom-plate-blank
+      screw-plate-holes
     )
-    (translate [0 0 -0.1])
-    cut
-  ))
+  )
+)
 
 (spit "things/test.scad"
       (write-scad (single-plate false)))
@@ -671,7 +679,7 @@ need to adjust for difference for thumb-z only"
 (spit "things/right.scad"
       (write-scad model-right))
 
-(spit "things/right-plate.scad"
-      (write-scad model-right-plate))
+(spit "things/bottom-plate.scad"
+      (write-scad bottom-plate))
 
 (defn -main [dum] 1)  ; dummy to make it easier to batch
