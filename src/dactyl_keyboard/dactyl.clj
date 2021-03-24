@@ -143,8 +143,6 @@
 (def column-radius (+ (/ (/ (+ mount-width extra-width) 2)
                          (Math/sin (/ β 2)))
                       cap-top-height))
-(def column-x-delta (+ -1 (- (* column-radius (Math/sin β)))))
-(def column-base-angle (* β (- centercol 2)))
 
 (defn apply-key-geometry [translate-fn rotate-x-fn rotate-y-fn column row shape]
   (let [column-angle (* β (- centercol column))   
