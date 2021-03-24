@@ -669,7 +669,7 @@
   ))
 
 (spit "things/test.scad"
-      (write-scad rj9-holder))
+      (write-scad (single-plate false)))
 
 (spit "things/right.scad"
       (write-scad model-right))
