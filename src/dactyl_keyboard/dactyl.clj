@@ -203,8 +203,6 @@
            (->> (sa-cap (if (= column 5) 1 1))
                 (key-place column row)))))
 
-; (pr (rotate-around-y π [10 0 1]))
-; (pr (key-position 1 cornerrow [(/ mount-width 2) (- (/ mount-height 2)) 0]))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Web Connectors ;;
@@ -264,7 +262,6 @@
 (def thumborigin 
   (map + (key-position 1 cornerrow [(/ mount-width 2) (- (/ mount-height 2)) 0])
          thumb-offsets))
-; (pr thumborigin)
 
 (defn thumb-tr-place [shape]
   (->> shape
