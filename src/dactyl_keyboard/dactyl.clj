@@ -63,46 +63,38 @@
 ;; Switch Hole ;;
 ;;;;;;;;;;;;;;;;;
 
-(def keyswitch-height 14.4) ;; Was 14.1, then 14.25
-(def keyswitch-width 14.4)
-
-(def sa-profile-key-height 12.7)
-
+(def keyswitch-width 14.2)
+(def keyswitch-height 14.2)
+(def edge-width 1.5)
+(def edge-height 1.5)
+(def mount-width (+ keyswitch-width (* 2 edge-width)))
+(def mount-height (+ keyswitch-height (* 2 edge-height)))
 (def plate-thickness 4)
-(def mount-width (+ keyswitch-width 3))
-(def mount-height (+ keyswitch-height 3))
-
-(def kailh-socket-thickness 3.5)
+(def kailh-clip-thickness 1.6)
 
 (defn single-plate [is-left-side]
-  (let [top-wall (->> (cube (+ keyswitch-width 3) 1.5 plate-thickness)
-                      (translate [0
-                                  (+ (/ 1.5 2) (/ keyswitch-height 2))
-                                  (/ plate-thickness 2)]))
-        left-wall (->> (cube 2 (+ keyswitch-height 3) plate-thickness)
-                       (translate [(+ (/ 1.5 2) (/ keyswitch-width 2))
-                                   0
-                                   (/ plate-thickness 2)]))
-        kailh-cutout (->> (cube (/ keyswitch-width 3) 1.6 (+ plate-thickness 1))
-                          (translate [0
-                                  (+ (/ 1.5 2) (+ (/ keyswitch-height 2)))
-                                  (/ plate-thickness)]))
-        kailh-socket-cradle
-                                (union
-                                    (->>  (cube (+ keyswitch-width 3.5) 1.5 2.875)
-                                          (translate [0
-                                                    (- (+ (/ 1.5 2) (/ keyswitch-height 2)))
-                                                    (- 0.9375)]))
-                                    (->>  (cube 3 5.5 1.25)
-                                          (translate [0.5 (- 5.85) (- 1.75)])))
-        plate-half (union (difference top-wall kailh-cutout) left-wall)]
-    (union plate-half
-           (->> plate-half
-                (mirror [1 0 0])
-                (mirror [0 1 0]))
-          (->> kailh-socket-cradle
-                (mirror [(if is-left-side 1 0) 0 0]))
-    )))
+  (let [
+        top-edge-center (/ (+ edge-height keyswitch-height) 2)
+        left-edge-center (/ (+ edge-width keyswitch-width) 2)
+        top-wall (->>
+          (cube mount-width edge-height plate-thickness)
+          (translate [0 top-edge-center (/ plate-thickness 2)]))
+        left-wall (->>
+          (cube edge-width mount-height plate-thickness)
+          (translate [left-edge-center 0 (/ plate-thickness 2)]))
+        top-kailh-cutout (->>
+          (cube (/ keyswitch-width 3) (+ 0.1 edge-height) plate-thickness)
+          (translate [0 top-edge-center (- (/ plate-thickness 2) kailh-clip-thickness)]))
+        half-plate (difference (union top-wall left-wall) top-kailh-cutout)
+        kailh-socket-cradle (union
+          (->> (cube mount-width edge-height 2.875)
+               (translate [0 top-edge-center (- 0.9375)]))
+          (->>  (cube 3 5.5 1.25)
+                (translate [0.5 5.85 (- 1.75)])))]
+    (union
+      half-plate
+      (->> half-plate (mirror [0 1 0]) (mirror [1 0 0]))
+      (mirror [(if is-left-side 1 0) 0 0] kailh-socket-cradle))))
 
 
 ;;;;;;;;;;;;;;;;
@@ -151,6 +143,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Placement Functions ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(def sa-profile-key-height 12.7)
 
 (def columns (range 0 ncols))
 (def rows (range 0 nrows))
