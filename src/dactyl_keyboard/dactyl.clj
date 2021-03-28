@@ -419,39 +419,20 @@ need to adjust for difference for thumb-z only"
     (->> (hull
       (place1 post1)
       (place1 (translate (wall-locate1 dx1 dy1) post1))
-      ; (place1 (translate (wall-locate2 dx1 dy1) post1))
       (place1 (translate (wall-locate2 dx1 dy1) post1))
       (place2 post2)
       (place2 (translate (wall-locate1 dx2 dy2) post2))
-      ; (place2 (translate (wall-locate2 dx2 dy2) post2))
       (place2 (translate (wall-locate2 dx2 dy2) post2))
       ))
     (->> (bottom-hull
       (place1 (translate (wall-locate2 dx1 dy1) post1))
-      ; (place1 (translate (wall-locate2 dx1 dy1) post1))
       (place2 (translate (wall-locate2 dx2 dy2) post2))
-      ; (place2 (translate (wall-locate2 dx2 dy2) post2))
       ))
   ))
-
-(defn wall-brace-back [place1 dx1 dy1 post1 place2 dx2 dy2 post2]
-    (->> (bottom-hull
-      (place1 (translate (wall-locate2 dx1 dy1) post1))
-      ; (place1 (translate (wall-locate2 dx1 dy1) post1))
-      ; (place2 (translate (wall-locate2 dx2 dy2) post2))
-      (place2 (translate (wall-locate2 dx2 dy2) post2))
-     ))
-)
 
 (defn key-wall-brace [x1 y1 dx1 dy1 post1 x2 y2 dx2 dy2 post2]
   (wall-brace (partial key-place x1 y1) dx1 dy1 post1
               (partial key-place x2 y2) dx2 dy2 post2))
-
-(defn key-wall-brace-back [x1 y1 dx1 dy1 post1 x2 y2 dx2 dy2 post2]
-  (wall-brace-back
-              (partial key-place x1 y1) dx1 dy1 post1
-              (partial key-place x2 y2) dx2 dy2 post2)
-  )
 
 (defn key-corner [x y loc]
   (case loc
@@ -472,14 +453,7 @@ need to adjust for difference for thumb-z only"
     right-wall
     ; back wall
     (for [x (range 0 ncols)] (key-wall-brace x 0 0 1 web-post-tl      x  0 0 1 web-post-tr))
-    (for [x (range 1 ncols)]
-      (case x
-        2 (key-wall-brace-back x 0 0 1 web-post-tl (dec x) 0 0 1 web-post-tr)
-        3 (key-wall-brace-back x 0 0 1 web-post-tl (dec x) 0 0 1 web-post-tr)
-        4 (key-wall-brace-back x 0 0 1 web-post-tl (dec x) 0 0 1 web-post-tr)
-          (key-wall-brace      x 0 0 1 web-post-tl (dec x) 0 0 1 web-post-tr)
-      )
-    )
+    (for [x (range 1 ncols)] (key-wall-brace x 0 0 1 web-post-tl (dec x) 0 0 1 web-post-tr))
     ; left wall
     (for [y (range 0 lastrow)] (key-wall-brace 0 y -1 0 web-post-tl 0 y -1 0 web-post-bl))
     (for [y (range 1 lastrow)] (key-wall-brace 0 (dec y) -1 0 web-post-bl 0 y -1 0 web-post-tl))
