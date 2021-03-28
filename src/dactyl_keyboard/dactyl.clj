@@ -416,61 +416,6 @@ need to adjust for difference for thumb-z only"
 (defn wall-locate2 [dx dy] [(* dx wall-xy-offset)                    (* dy wall-xy-offset)                    wall-z-offset])
 (defn wall-locate3 [dx dy] [(* dx (+ wall-xy-offset wall-thickness)) (* dy (+ wall-xy-offset wall-thickness)) wall-z-offset])
 
-(def thumb-connectors
-  (union
-    (->> (triangle-hulls                                         ; top two
-      (thumb-m-place web-post-tr)
-      (thumb-m-place web-post-br)
-      (thumb-r-place web-post-tl)
-      (thumb-r-place web-post-bl)))
-    (->> (triangle-hulls                                         ; top two
-      (thumb-m-place web-post-tl)
-      (thumb-l-place web-post-tr)
-      (thumb-m-place web-post-bl)
-      (thumb-l-place web-post-br)
-      (thumb-m-place web-post-bl)))
-    (->> (triangle-hulls
-      (key-place 3 lastrow web-post-tr)
-      (key-place 3 lastrow web-post-br)
-      (key-place 3 lastrow web-post-tr)
-      (key-place 4 cornerrow web-post-bl)))
-    (hull                                                   ; between thumb m and top key
-      (key-place 0 cornerrow (translate (wall-locate1 -1 0) web-post-bl))
-      (thumb-m-place web-post-tr)
-      (thumb-m-place web-post-tl))
-    (->> (triangle-hulls                                          ; top ridge thumb side
-      (key-place 0 cornerrow (translate (wall-locate1 -1 0) web-post-bl))
-      (key-place 0 cornerrow (translate (wall-locate2 -1 0) web-post-bl))
-      (key-place 0 cornerrow web-post-bl)
-      (thumb-r-place web-post-tr)
-      (thumb-r-place web-post-tl)
-      (thumb-m-place web-post-tr)
-      (key-place 0 cornerrow (translate (wall-locate2 -1 0) web-post-bl))
-      ))
-    (->> (triangle-hulls
-      (key-place 0 cornerrow web-post-br)
-      (key-place 0 cornerrow web-post-bl)
-      (thumb-r-place web-post-tl)
-      (key-place 1 cornerrow web-post-bl)
-      (key-place 1 cornerrow web-post-br)))
-    (->> (triangle-hulls
-      (thumb-r-place web-post-tl)
-      (thumb-r-place web-post-tr)
-      (key-place 1 cornerrow web-post-br)
-      (key-place 2 lastrow web-post-tl)
-      ))
-    (->> (triangle-hulls
-      (key-place 2 lastrow web-post-tl)
-      (thumb-r-place web-post-tr)
-      (key-place 2 lastrow web-post-bl)
-      (thumb-r-place web-post-br)))
-    (->> (triangle-hulls
-      (thumb-r-place web-post-br)
-      (key-place 2 lastrow web-post-bl)
-      (key-place 3 lastrow web-post-bl)
-      (key-place 2 lastrow web-post-br)))
-    ))
-
 ; dx1, dy1, dx2, dy2 = direction of the wall. '1' for front, '-1' for back, '0' for 'not in this direction'.
 ; place1, place2 = function that places an object at a location, typically refers to the center of a key position.
 ; post1, post2 = the shape that should be rendered
@@ -622,7 +567,6 @@ need to adjust for difference for thumb-z only"
       (key-holes false)
       connectors
       (thumb false)
-      thumb-connectors
       case-walls
       screw-insert-shells
       rj9-shell
