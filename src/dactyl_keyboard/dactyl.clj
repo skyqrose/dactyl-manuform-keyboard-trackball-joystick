@@ -234,9 +234,6 @@
 
 (def sa-profile-key-height 12.7)
 
-(def columns (range 0 ncols))
-(def rows (range 0 nrows))
-
 (def cap-top-height (+ plate-thickness sa-profile-key-height))
 (def row-radius (+ (/ (/ (+ mount-height extra-height) 2)
                       (Math/sin (/ column-curvature 2)))
@@ -285,8 +282,8 @@
 
 (defn key-places [shape]
   (apply union
-         (for [column columns
-               row rows
+         (for [column (range 0 ncols)
+               row (range 0 nrows)
                :when (or (.contains [2 3] column)
                          (not= row lastrow))]
            (->> shape
@@ -332,7 +329,7 @@
              (key-place column row web-post-br)))
 
           ;; Column connections
-          (for [column columns
+          (for [column (range 0 ncols)
                 row (range 0 cornerrow)]
             (triangle-hulls
              (key-place column row web-post-bl)
