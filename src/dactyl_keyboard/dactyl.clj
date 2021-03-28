@@ -311,11 +311,6 @@
 (def web-post-bl (translate [(+ (/ mount-width -2) post-adj) (+ (/ mount-height -2) post-adj) 0] web-post))
 (def web-post-br (translate [(- (/ mount-width 2) post-adj) (+ (/ mount-height -2) post-adj) 0] web-post))
 
-(defn triangle-hulls [& shapes]
-  (apply union
-         (map (partial apply hull)
-              (partition 3 1 shapes))))
-
 (def connectors
   (apply union
          (concat
@@ -323,7 +318,7 @@
           (for [column (range 0 (dec ncols))
                 row (range 0 nrows)
                 :when (or (not= row lastrow) (= 2 column))]
-            (triangle-hulls
+            (hull
              (key-place (inc column) row web-post-tl)
              (key-place column row web-post-tr)
              (key-place (inc column) row web-post-bl)
@@ -335,7 +330,7 @@
                 :when (or (not= row (dec lastrow))
                           (= column 2)
                           (= column 3))]
-            (triangle-hulls
+            (hull
              (key-place column row web-post-bl)
              (key-place column row web-post-br)
              (key-place column (inc row) web-post-tl)
@@ -345,7 +340,7 @@
           (for [column (range 0 (dec ncols))
                 row (range 0 (dec nrows))
                 :when (or (not= row (dec lastrow)) (= column 2))]
-            (triangle-hulls
+            (hull
              (key-place column row web-post-br)
              (key-place column (inc row) web-post-tr)
              (key-place (inc column) row web-post-bl)
