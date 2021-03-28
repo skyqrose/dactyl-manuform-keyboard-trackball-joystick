@@ -321,7 +321,8 @@
          (concat
           ;; Row connections
           (for [column (range 0 (dec ncols))
-                row (range 0 lastrow)]
+                row (range 0 nrows)
+                :when (or (not= row lastrow) (= 2 column))]
             (triangle-hulls
              (key-place (inc column) row web-post-tl)
              (key-place column row web-post-tr)
@@ -330,7 +331,10 @@
 
           ;; Column connections
           (for [column (range 0 ncols)
-                row (range 0 cornerrow)]
+                row (range 0 (dec nrows))
+                :when (or (not= row (dec lastrow))
+                          (= column 2)
+                          (= column 3))]
             (triangle-hulls
              (key-place column row web-post-bl)
              (key-place column row web-post-br)
@@ -339,7 +343,8 @@
 
           ;; Diagonal connections
           (for [column (range 0 (dec ncols))
-                row (range 0 cornerrow)]
+                row (range 0 (dec nrows))
+                :when (or (not= row (dec lastrow)) (= column 2))]
             (triangle-hulls
              (key-place column row web-post-br)
              (key-place column (inc row) web-post-tr)
@@ -424,24 +429,6 @@ need to adjust for difference for thumb-z only"
       (thumb-m-place web-post-bl)
       (thumb-l-place web-post-br)
       (thumb-m-place web-post-bl)))
-   (->> (triangle-hulls                                         ; top two to the main keyboard, starting on the left
-      (key-place 2 lastrow web-post-br)
-      (key-place 3 lastrow web-post-bl)
-      (key-place 2 lastrow web-post-tr)
-      (key-place 3 lastrow web-post-tl)
-      (key-place 3 cornerrow web-post-bl)
-      (key-place 3 lastrow web-post-tr)
-      (key-place 3 cornerrow web-post-br)
-      ; (key-place 4 cornerrow web-post-bl)
-      ))
-    (->> (triangle-hulls
-      ; (key-place 1 cornerrow web-post-br)
-      (key-place 2 lastrow web-post-tl)
-      (key-place 2 cornerrow web-post-bl)
-      (key-place 2 lastrow web-post-tr)
-      (key-place 2 cornerrow web-post-br)
-      (key-place 3 cornerrow web-post-bl)
-      ))
     (->> (triangle-hulls
       (key-place 3 lastrow web-post-tr)
       (key-place 3 lastrow web-post-br)
