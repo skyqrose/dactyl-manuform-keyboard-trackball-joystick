@@ -346,54 +346,6 @@
              (key-place (inc column) row web-post-bl)
              (key-place (inc column) (inc row) web-post-tl))))))
 
-;;;;;;;;;;;;
-;; Thumbs ;;
-;;;;;;;;;;;;
-
-(def thumb-offsets (if (> nrows 4) [8 -5 8] [9 -5 4]))
-
-(def thumborigin
-  (map + (key-position 1 cornerrow [(/ mount-width 2) (- (/ mount-height 2)) 0])
-       thumb-offsets))
-
-"need to account for plate thickness which is baked into thumb-_-place rotation & move values
-plate-thickness was 2
-need to adjust for difference for thumb-z only"
-(def thumb-design-z 2)
-(def thumb-z-adjustment (- (if (> plate-thickness thumb-design-z)
-                                 (- thumb-design-z plate-thickness)
-                                 (if (< plate-thickness thumb-design-z)
-                                       (- thumb-design-z plate-thickness)
-                                       0))
-                            1.1))
-(def thumb-x-rotation-adjustment (if (> nrows 4) -12 -8))
-(defn thumb-place [rot move shape]
-  (->> shape
-
-       (translate [0 0 thumb-z-adjustment])                   ;adapt thumb positions for increased plate
-       (rotate (deg2rad thumb-x-rotation-adjustment) [1 0 0]) ;adjust angle of all thumbs to be less angled down towards user since key is taller
-
-       (rotate (deg2rad (nth rot 0)) [1 0 0])
-       (rotate (deg2rad (nth rot 1)) [0 1 0])
-       (rotate (deg2rad (nth rot 2)) [0 0 1])
-       (translate thumborigin)
-       (translate move)))
-
-; convexer
-(defn thumb-r-place [shape] (thumb-place [14 -40 10] [-15 -10 5] shape)) ; right
-(defn thumb-m-place [shape] (thumb-place [10 -23 20] [-33 -15 -6] shape)) ; middle
-(defn thumb-l-place [shape] (thumb-place [6 -5 35] [-52.5 -25.5 -11.5] shape)) ; left
-
-(defn thumb-layout [shape]
-  (union
-    (thumb-r-place shape)
-    (thumb-m-place shape)
-    (thumb-l-place shape)
-    ))
-
-(def thumbcaps (thumb-layout sa-cap))
-(defn thumb [is-left-side] (thumb-layout (single-plate is-left-side)))
-
 ;;;;;;;;;;
 ;; Case ;;
 ;;;;;;;;;;
@@ -529,6 +481,90 @@ need to adjust for difference for thumb-z only"
 (def screw-insert-shells (copy-to-positions screw-positions screw-insert-shell))
 (def screw-plate-holes (copy-to-positions screw-positions screw-plate-hole))
 
+;;;;;;;;;;;;
+;; Thumbs ;;
+;;;;;;;;;;;;
+
+(def bottom-left-key-position (key-position 1 cornerrow [(/ mount-width 2) (- (/ mount-height 2)) 0]))
+(def thumb-cluster-rot [0 0 0])
+(def thumb-cluster-move [-30 -20 10]) ; relative to bottom-left-key-position
+
+; middle key has rot=0 mov=0. other keys are relative to that
+; control the movement of the whole cluster with the constants above
+(defn thumb-place [rot move shape]
+  (->> shape
+       (rotate (deg2rad (nth rot 0)) [1 0 0])
+       (rotate (deg2rad (nth rot 1)) [0 1 0])
+       (rotate (deg2rad (nth rot 2)) [0 0 1])
+       (translate move)
+       (rotate (deg2rad (nth thumb-cluster-rot 0)) [1 0 0])
+       (rotate (deg2rad (nth thumb-cluster-rot 1)) [0 1 0])
+       (rotate (deg2rad (nth thumb-cluster-rot 2)) [0 0 1])
+       (translate thumb-cluster-move)
+  ))
+
+(defn thumb-r-place [shape] (thumb-place [14 -40 10] [-15 -10 5] shape)) ; right
+(defn thumb-m-place [shape] (thumb-place [10 -23 20] [-33 -15 -6] shape)) ; middle
+(defn thumb-l-place [shape] (thumb-place [6 -5 35] [-52.5 -25.5 -11.5] shape)) ; left
+
+(defn thumb-layout [shape]
+  (union
+    (thumb-r-place shape)
+    (thumb-m-place shape)
+    (thumb-l-place shape)
+    ))
+
+(def thumbcaps (thumb-layout sa-cap))
+(defn thumb [is-left-side] (thumb-layout (single-plate is-left-side)))
+
+;;;;;;;;;;;;;;;;
+;; Thumb Case ;;
+;;;;;;;;;;;;;;;;
+
+(def thumb-connections (union
+  (hull
+    (thumb-l-place web-post-br)
+    (thumb-l-place web-post-tr)
+    (thumb-m-place web-post-tl)
+    (thumb-m-place web-post-bl))
+  (hull
+    (thumb-m-place web-post-br)
+    (thumb-m-place web-post-tr)
+    (thumb-r-place web-post-tl)
+    (thumb-r-place web-post-bl))
+))
+
+(def thumb-wall-posts [
+  [thumb-l-place 0 -1 web-post-bl]
+  [thumb-l-place 0 -1 web-post-br]
+  [thumb-m-place 0 -1 web-post-bl]
+  [thumb-m-place 0 -1 web-post-br]
+  [thumb-r-place 0 -1 web-post-bl]
+  [thumb-r-place 0 -1 web-post-br]
+  [thumb-r-place 1 0 web-post-br]
+  [thumb-r-place 1 0 web-post-tr]
+  [thumb-r-place 0 1 web-post-tr]
+  [thumb-r-place 0 1 web-post-tl]
+  [thumb-m-place 0 1 web-post-tr]
+  [thumb-m-place 0 1 web-post-tl]
+  [thumb-l-place 0 1 web-post-tr]
+  [thumb-l-place 0 1 web-post-tl]
+  [thumb-l-place -1 0 web-post-tl]
+  [thumb-l-place -1 0 web-post-bl]
+  [thumb-l-place 0 -1 web-post-bl]
+])
+(def thumb-walls
+  (->> thumb-wall-posts
+    (partition 2 1)
+    (map (fn [[[place1 dx1 dy1 post1] [place2 dx2 dy2 post2]]] (wall-brace place1 dx1 dy1 post1 place2 dx2 dy2 post2)))
+    (apply union)
+))
+
+(def thumb-case (union
+  thumb-connections
+  thumb-walls
+))
+
 ;;;;;;;;;;;;;;
 ;; Assembly ;;
 ;;;;;;;;;;;;;;
@@ -574,7 +610,14 @@ need to adjust for difference for thumb-z only"
 )
 
 (spit "things/test.scad"
-      (write-scad (single-plate false)))
+      (write-scad (union
+                    (key-holes false)
+                    case-walls
+                    connectors
+                    (thumb false)
+                    thumbcaps
+                    thumb-case
+                  )))
 
 (spit "things/right.scad"
       (write-scad model-right))
