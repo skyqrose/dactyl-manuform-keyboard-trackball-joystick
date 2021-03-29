@@ -346,9 +346,9 @@
              (key-place (inc column) row web-post-bl)
              (key-place (inc column) (inc row) web-post-tl))))))
 
-;;;;;;;;;;
-;; Case ;;
-;;;;;;;;;;
+;;;;;;;;;;;
+;; Cases ;;
+;;;;;;;;;;;
 
 (defn bottom [height p]
   (->> (project p)
@@ -366,7 +366,7 @@
 ; dx1, dy1, dx2, dy2 = direction of the wall. '1' for front, '-1' for back, '0' for 'not in this direction'.
 ; place1, place2 = function that places an object at a location, typically refers to the center of a key position.
 ; post1, post2 = the shape that should be rendered
-(defn wall-brace [place1 dx1 dy1 post1 place2 dx2 dy2 post2]
+(defn wall-brace [[[place1 dx1 dy1 post1] [place2 dx2 dy2 post2]]]
   (union
     (->> (hull
       (place1 post1)
@@ -382,46 +382,71 @@
       ))
   ))
 
-(defn key-wall-brace [x1 y1 dx1 dy1 post1 x2 y2 dx2 dy2 post2]
-  (wall-brace (partial key-place x1 y1) dx1 dy1 post1
-              (partial key-place x2 y2) dx2 dy2 post2))
+; wall-posts is a vector of [place dx dy post] elements
+; if you're going all the way around, the endpoint should be put at the start and end of the vector
+(defn walls [wall-posts]
+  (->> wall-posts
+    (partition 2 1)
+    (map wall-brace)
+    (apply union)
+))
 
-(defn key-corner [x y loc]
-  (case loc
-    :tl (key-wall-brace x y 0  1 web-post-tl x y -1 0 web-post-tl)
-    :tr (key-wall-brace x y 0  1 web-post-tr x y  1 0 web-post-tr)
-    :bl (key-wall-brace x y 0 -1 web-post-bl x y -1 0 web-post-bl)
-    :br (key-wall-brace x y 0 -1 web-post-br x y  1 0 web-post-br)))
+;;;;;;;;;;;;;;;
+;; Body Case ;;
+;;;;;;;;;;;;;;;
 
-(def case-walls
+(defn key-post [col row dx dy post]
+  [(partial key-place col row) dx dy post])
+
+(def body-wall-posts (apply concat [
+  ; starting at front right corner, going counterclockwise
+  ; right
+  (apply concat (for [row (range cornerrow -1 -1)] [
+    (key-post lastcol row 1 0 web-post-br)
+    (key-post lastcol row 1 0 web-post-tr)
+  ]))
+  ; back
+  (apply concat (for [col (range lastcol -1 -1)] [
+    (key-post col 0 0 1 web-post-tr)
+    (key-post col 0 0 1 web-post-tl)
+  ]))
+  ; left
+  (apply concat (for [row (range 0 (inc cornerrow))] [
+    (key-post 0 row -1 0 web-post-tl)
+    (key-post 0 row -1 0 web-post-bl)
+  ]))
+  ; front left
+  [
+    (key-post 0 cornerrow 0 -1 web-post-bl)
+    (key-post 0 cornerrow 0 -1 web-post-br)
+    (key-post 1 cornerrow 0 -1 web-post-bl)
+    (key-post 1 cornerrow 0 -1 web-post-br)
+  ]
+  ; front center
+  [
+    (key-post 2 lastrow -1 0 web-post-tl)
+    (key-post 2 lastrow -1 0 web-post-bl)
+    (key-post 2 lastrow 0 -1 web-post-bl)
+    (key-post 2 lastrow 0 -1 web-post-br)
+    (key-post 3 lastrow 0 -1 web-post-bl)
+    (key-post 3 lastrow 0.5 -1 web-post-br)
+    (key-post 4 cornerrow 0.5 -1 web-post-bl)
+    (key-post 4 cornerrow 0 -1 web-post-br)
+  ]
+  ; front right
+  (apply concat (for [col (range 5 ncols)] [
+    (key-post col cornerrow 0 -1 web-post-bl)
+    (key-post col cornerrow 0 -1 web-post-br)
+  ]))
+  ; right side to close
+  [(key-post lastcol cornerrow 1 0 web-post-br)]
+]))
+
+(def body-walls (walls body-wall-posts))
+
+(def body-case
   (union
-    ; corners
-    (key-corner lastcol 0 :tr) ; top right
-    (key-corner lastcol cornerrow :br) ; bottom right
-    (key-corner 0 0 :tl) ; left back
-    (key-corner 0 cornerrow :bl) ; bottom left
-    ; right-wall
-    (for [y (range 0 (dec nrows))] (key-wall-brace lastcol      y  1 0 web-post-tr lastcol y 1 0 web-post-br))
-    (for [y (range 1 (dec nrows))] (key-wall-brace lastcol (dec y) 1 0 web-post-br lastcol y 1 0 web-post-tr))
-    ; back wall
-    (for [x (range 0 ncols)] (key-wall-brace x 0 0 1 web-post-tl      x  0 0 1 web-post-tr))
-    (for [x (range 1 ncols)] (key-wall-brace x 0 0 1 web-post-tl (dec x) 0 0 1 web-post-tr))
-    ; left wall
-    (for [y (range 0 (dec nrows))] (key-wall-brace 0      y  -1 0 web-post-tl 0 y -1 0 web-post-bl))
-    (for [y (range 1 (dec nrows))] (key-wall-brace 0 (dec y) -1 0 web-post-bl 0 y -1 0 web-post-tl))
-    ; front wall, left to right
-    (key-wall-brace 0 cornerrow 0 -1 web-post-bl 0 cornerrow 0 -1 web-post-br)
-    (key-wall-brace 0 cornerrow 0 -1 web-post-br 1 cornerrow 0 -1 web-post-bl)
-    (key-wall-brace 1 cornerrow 0 -1 web-post-bl 1 cornerrow 0 -1 web-post-br)
-    (key-wall-brace 1 cornerrow 0 -1 web-post-br 2 lastrow -1 0 web-post-tl)
-    (key-wall-brace 2 lastrow -1 0 web-post-tl 2 lastrow -1 0 web-post-bl)
-    (key-corner 2 lastrow :bl)
-    (key-wall-brace 2 lastrow 0 -1 web-post-bl 2 lastrow 0 -1 web-post-br)
-    (key-wall-brace 2 lastrow 0 -1 web-post-br 3 lastrow 0 -1 web-post-bl)
-    (key-wall-brace 3 lastrow 0 -1 web-post-bl 3 lastrow 0.5 -1 web-post-br)
-    (key-wall-brace 3 lastrow 0.5 -1 web-post-br 4 cornerrow 0.5 -1 web-post-bl)
-    (for [x (range 4 ncols)] (key-wall-brace x cornerrow 0 -1 web-post-bl      x  cornerrow 0 -1 web-post-br))
-    (for [x (range 5 ncols)] (key-wall-brace x cornerrow 0 -1 web-post-bl (dec x) cornerrow 0 -1 web-post-br))
+    body-walls
     ; fill gaps left by concave corners on front
     (->> (hull
       (key-place 3 cornerrow web-post-br)
@@ -553,12 +578,8 @@
   [thumb-l-place -1 0 web-post-bl]
   [thumb-l-place 0 -1 web-post-bl]
 ])
-(def thumb-walls
-  (->> thumb-wall-posts
-    (partition 2 1)
-    (map (fn [[[place1 dx1 dy1 post1] [place2 dx2 dy2 post2]]] (wall-brace place1 dx1 dy1 post1 place2 dx2 dy2 post2)))
-    (apply union)
-))
+
+(def thumb-walls (walls thumb-wall-posts))
 
 (def thumb-case (union
   thumb-connections
@@ -575,7 +596,7 @@
       (key-holes false)
       connectors
       (thumb false)
-      case-walls
+      body-case
       screw-insert-shells
       rj9-shell
       thumbcaps
@@ -591,7 +612,7 @@
 (def bottom-plate
   (let
     [
-      bottom-outline (cut (translate [0 0 -0.1] case-walls))
+      bottom-outline (cut (translate [0 0 -0.1] body-walls))
       inner-thing (->>
         (union
           (extrude-linear {:height 99 :scale  0.1 :center true} bottom-outline)
@@ -612,7 +633,7 @@
 (spit "things/test.scad"
       (write-scad (union
                     (key-holes false)
-                    case-walls
+                    body-case
                     connectors
                     (thumb false)
                     thumbcaps
