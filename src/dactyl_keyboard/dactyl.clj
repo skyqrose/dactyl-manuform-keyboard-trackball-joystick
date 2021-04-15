@@ -199,33 +199,35 @@
       (mirror [(if is-left-side 1 0) 0 0] hotswap-holder))
     ))
 
-;;;;;;;;;;;;;;;;
-;; SA Keycaps ;;
-;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;
+;; Keycaps ;;
+;;;;;;;;;;;;;
 
-(def sa-length 18.25)
-(def sa-height 12.5)
+(def dsa-side-length-bottom 18.25)
+(def dsa-side-length-top 11.9)
+(def dsa-height 7.6)
+(def dsa-plate-to-bottom-unpressed 6.6)
+(def dsa-plate-to-bottom-pressed 2.8)
 
-(def sa-key-height-from-plate 7.39)
-(def sa-cap-bottom-height (+ sa-key-height-from-plate plate-thickness))
-(def sa-cap-bottom-height-pressed (+ 3 plate-thickness))
-
-(def sa-double-length 37.5)
-(def sa-cap
-  (let [bl2 (/ sa-length 2)
-                     m 8.5
-                     key-cap (hull (->> (polygon [[bl2 bl2] [bl2 (- bl2)] [(- bl2) (- bl2)] [(- bl2) bl2]])
-                                        (extrude-linear {:height 0.1 :twist 0 :convexity 0})
-                                        (translate [0 0 0.05]))
-                                   (->> (polygon [[m m] [m (- m)] [(- m) (- m)] [(- m) m]])
-                                        (extrude-linear {:height 0.1 :twist 0 :convexity 0})
-                                        (translate [0 0 6]))
-                                   (->> (polygon [[6 6] [6 -6] [-6 -6] [-6 6]])
-                                        (extrude-linear {:height 0.1 :twist 0 :convexity 0})
-                                        (translate [0 0 sa-height])))]
+(def dsa-cap
+  (let
+    [
+      key-cap (hull
+        (->>
+          (square dsa-side-length-bottom dsa-side-length-bottom)
+          (extrude-linear {:height 0.1 :twist 0 :convexity 0})
+          (translate [0 0 0.05])
+        )
+        (->>
+          (square dsa-side-length-top dsa-side-length-top)
+          (extrude-linear {:height 0.1 :twist 0 :convexity 0})
+          (translate [0 0 (- dsa-height 0.05)])
+        )
+      )
+    ]
   (color [220/255 163/255 163/255 1] (union
-    (translate [0 0 sa-cap-bottom-height] key-cap)
-    (translate [0 0 sa-cap-bottom-height-pressed] key-cap)
+    (translate [0 0 (+ plate-thickness dsa-plate-to-bottom-unpressed)] key-cap)
+    (translate [0 0 (+ plate-thickness dsa-plate-to-bottom-pressed)] key-cap)
   ))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -293,7 +295,7 @@
   (key-places (single-plate is-left-side)))
 
 (def caps
-  (key-places sa-cap))
+  (key-places dsa-cap))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;; Web Connectors ;;
@@ -539,7 +541,7 @@
     (thumb-l-place shape)
     ))
 
-(def thumbcaps (thumb-layout sa-cap))
+(def thumbcaps (thumb-layout dsa-cap))
 (defn thumb [is-left-side] (thumb-layout (single-plate is-left-side)))
 
 ;;;;;;;;;;;;;;;;
