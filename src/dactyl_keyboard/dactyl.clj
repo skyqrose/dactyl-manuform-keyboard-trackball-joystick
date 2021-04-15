@@ -604,6 +604,37 @@
 (def tb-move [-30 -20 10]) ; relative to bottom-left-key-position
 
 (def tb-outer-radius (+ tb-radius tb-clearance tb-shell-thickness))
+(def tb-bearing-longitudes (map deg2rad [0 120 240]))
+(def tb-bearing-center-radius (+ tb-radius (/ tb-bearing-diam 2)))
+
+(def tb-bearing-void
+  (->>
+    (union
+      (cylinder (/ tb-dowel-diam 2) tb-dowel-length)
+      (cylinder (+ tb-clearance (/ tb-bearing-diam 2)) tb-bearing-length)
+    )
+    ; put on shell of sphere
+    (translate [tb-bearing-center-radius 0 0])
+    ; pocket to slide into
+    (union
+      (translate [(/ tb-bearing-center-radius 2) 0 0]
+        (cube tb-bearing-center-radius tb-dowel-diam tb-dowel-length))
+      (translate [(/ tb-bearing-center-radius 2) 0 0]
+        (cube tb-bearing-center-radius (+ (* 2 tb-clearance) tb-bearing-diam) tb-bearing-length))
+    )
+    (rotate [(deg2rad 90) 0 0])
+    (rotate [0 tb-bearing-latitude 0])
+  ))
+
+(def tb-bearing-shell
+  (->>
+    (cylinder
+      (+ (/ tb-bearing-diam 2) tb-clearance tb-shell-thickness)
+      (+ tb-dowel-length tb-shell-thickness))
+    (translate [tb-bearing-center-radius 0 0])
+    (rotate [(deg2rad 90) 0 0])
+    (rotate [0 tb-bearing-latitude 0])
+  ))
 
 (def tb-shell
   (difference
@@ -612,8 +643,12 @@
         (sphere tb-outer-radius)
         (translate [0 0 (/ tb-outer-radius -2)] (cylinder tb-outer-radius tb-outer-radius))
       )
+      (union (for [longitude tb-bearing-longitudes]
+         (rotate [0 0 longitude] tb-bearing-shell)))
     )
     (sphere (+ tb-radius tb-clearance))
+    (union (for [longitude tb-bearing-longitudes]
+       (rotate [0 0 longitude] tb-bearing-void)))
   ))
 
 (def trackball tb-shell)
