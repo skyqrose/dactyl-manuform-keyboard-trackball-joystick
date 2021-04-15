@@ -609,8 +609,8 @@
 (def tb-pcb-post-offset 1.75) ; center of post to edge of pcb
 (def tb-pcb-post-shelf-width 0.8)
 (def tb-sensor-holder-thickness 2)
-(def tb-rot [0 0 0])
-(def tb-move [-30 -20 10]) ; relative to bottom-left-key-position
+(def tb-rot [30 -30 0]) ; degrees
+(def tb-move [-50 10 10]) ; relative to bottom-left-key-position
 
 (def tb-radius (/ tb-diam 2))
 (def tb-outer-radius (+ tb-radius tb-clearance tb-shell-thickness))
@@ -719,8 +719,8 @@
   ))
 
 
-(def tb-shell
-  (difference
+(def trackball-shell
+  (->>
     (union
       (sphere tb-outer-radius)
       (union (for [longitude tb-bearing-longitudes]
@@ -731,21 +731,32 @@
         (rotate [0 (- (deg2rad 90) tb-sensor-latitude) 0])
       )
     )
-    (sphere (+ tb-radius tb-clearance))
-    (union (for [longitude tb-bearing-longitudes]
-       (rotate [0 0 longitude] tb-bearing-void)))
-    (->>
-      tb-sensor-void
-      (translate [0 0 (* -1 tb-radius)])
-      (rotate [0 (- (deg2rad 90) tb-sensor-latitude) 0])
-    )
-    ; cut to bottom half of sphere
-    (translate [0 0 100] (cube 200 200 200))
+    (thumb-place tb-rot tb-move)
   ))
 
-(def tb-ball (color [220/255 163/255 163/255 1] (sphere tb-radius)))
+(def trackball-void
+  (->>
+    (union
+      (sphere (+ tb-radius tb-clearance))
+      (union (for [longitude tb-bearing-longitudes]
+         (rotate [0 0 longitude] tb-bearing-void)))
+      (->>
+        tb-sensor-void
+        (translate [0 0 (* -1 tb-radius)])
+        (rotate [0 (- (deg2rad 90) tb-sensor-latitude) 0])
+      )
+      ; cut to bottom half of sphere
+      (translate [0 0 100] (cylinder tb-outer-radius 200))
+    )
+    (thumb-place tb-rot tb-move)
+  ))
 
-(def trackball tb-shell)
+(def trackball-ball
+  (->>
+    (sphere tb-radius)
+    (color [220/255 163/255 163/255 1])
+    (thumb-place tb-rot tb-move)
+  ))
 
 ;;;;;;;;;;;;;;
 ;; Assembly ;;
@@ -792,9 +803,22 @@
 )
 
 (spit "things/test.scad"
-      (write-scad (union
-                    trackball
-                  )))
+      (write-scad
+        (union
+          (difference
+            (union
+              (key-holes false)
+              connectors
+              (thumb false)
+              body-case
+              trackball-shell
+            )
+            trackball-void
+          )
+          trackball-ball
+          caps
+          thumbcaps
+        )))
 
 (spit "things/right.scad"
       (write-scad model-right))
