@@ -604,14 +604,18 @@
 (def tb-move [-30 -20 10]) ; relative to bottom-left-key-position
 
 (def tb-outer-radius (+ tb-radius tb-clearance tb-shell-thickness))
+(def tb-dowel-radius (/ tb-dowel-diam 2))
+(def tb-bearing-radius (/ tb-bearing-diam 2))
 (def tb-bearing-longitudes (map deg2rad [0 120 240]))
-(def tb-bearing-center-radius (+ tb-radius (/ tb-bearing-diam 2)))
+(def tb-bearing-center-radius (+ tb-radius tb-bearing-radius))
 
 (def tb-bearing-void
   (->>
     (union
-      (cylinder (/ tb-dowel-diam 2) tb-dowel-length)
-      (cylinder (+ tb-clearance (/ tb-bearing-diam 2)) tb-bearing-length)
+      (cylinder tb-dowel-radius tb-dowel-length)
+      (cylinder
+        (+ tb-clearance (max tb-bearing-radius (+ tb-shell-thickness tb-dowel-radius)))
+        (+ (* 2 tb-clearance) tb-bearing-length))
     )
     ; put on shell of sphere
     (translate [tb-bearing-center-radius 0 0])
@@ -629,7 +633,7 @@
 (def tb-bearing-shell
   (->>
     (cylinder
-      (+ (/ tb-bearing-diam 2) tb-clearance tb-shell-thickness)
+      (+ tb-dowel-radius tb-shell-thickness)
       (+ tb-dowel-length tb-shell-thickness))
     (translate [tb-bearing-center-radius 0 0])
     (rotate [(deg2rad 90) 0 0])
