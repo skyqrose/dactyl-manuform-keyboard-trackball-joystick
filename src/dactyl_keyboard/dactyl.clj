@@ -586,6 +586,38 @@
   thumb-walls
 ))
 
+;;;;;;;;;;;;;;;
+;; Trackball ;;
+;;;;;;;;;;;;;;;
+
+(def tb-radius 34)
+(def tb-clearance 0.5)
+(def tb-shell-thickness 4)
+(def tb-dowel-diam 3)
+(def tb-dowel-length 6)
+(def tb-bearing-diam 6)
+(def tb-bearing-length 2.5)
+(def tb-bearing-latitude (deg2rad 20))
+(def tb-sensor-hole-diam 4)
+(def tb-sensor-hole-latitude (deg2rad 4))
+(def tb-rot [0 0 0])
+(def tb-move [-30 -20 10]) ; relative to bottom-left-key-position
+
+(def tb-outer-radius (+ tb-radius tb-clearance tb-shell-thickness))
+
+(def tb-shell
+  (difference
+    (union
+      (intersection ; cut sphere to bottom half
+        (sphere tb-outer-radius)
+        (translate [0 0 (/ tb-outer-radius -2)] (cylinder tb-outer-radius tb-outer-radius))
+      )
+    )
+    (sphere (+ tb-radius tb-clearance))
+  ))
+
+(def trackball tb-shell)
+
 ;;;;;;;;;;;;;;
 ;; Assembly ;;
 ;;;;;;;;;;;;;;
@@ -632,12 +664,7 @@
 
 (spit "things/test.scad"
       (write-scad (union
-                    (key-holes false)
-                    body-case
-                    connectors
-                    (thumb false)
-                    thumbcaps
-                    thumb-case
+                    trackball
                   )))
 
 (spit "things/right.scad"
