@@ -591,7 +591,7 @@
 ;;;;;;;;;;;;;;;
 
 (def tb-diam 34)
-(def tb-clearance 0.5)
+(def tb-clearance 0.8)
 (def tb-shell-thickness 3)
 (def tb-dowel-diam 3)
 (def tb-dowel-length 6)
@@ -742,6 +742,8 @@
     ; cut to bottom half of sphere
     (translate [0 0 100] (cube 200 200 200))
   ))
+
+(def tb-ball (color [220/255 163/255 163/255 1] (sphere tb-radius)))
 
 (def trackball tb-shell)
 
