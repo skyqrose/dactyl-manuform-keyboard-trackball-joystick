@@ -23,9 +23,9 @@
 (def centerrow (case nrows
   6 3.1
   5 2.1
-  4 1.75)) ; controls front-back tilt
+  4 1.3)) ; controls front-back tilt
 (def centercol 3)                       ; controls left-right tilt / tenting (higher number is more tenting)
-(def tenting-angle (deg2rad 18))        ; or, change this for more precise tenting control
+(def tenting-angle (deg2rad 22))        ; or, change this for more precise tenting control
 
 (defn column-offset [column] (cond
   (= column 2) [0 2.8 -6.5]
@@ -36,10 +36,10 @@
 (def keyboard-z-offset (case nrows
     6 20
     5 10.5
-    4 9))                               ; controls overall height
+    4 13))                               ; controls overall height
 
 (def extra-width 2)                     ; extra space between the base of keys; original= 2
-(def extra-height 1.7)                  ; original= 0.5
+(def extra-height 0.5)                  ; original= 0.5
 
 (def wall-z-offset -7)                  ; length of the first downward-sloping part of the wall (negative)
 (def wall-xy-offset 1)                  ; offset in the x and/or y direction for the first downward-sloping part of the wall (negative)
@@ -512,27 +512,31 @@
 ;; Thumbs ;;
 ;;;;;;;;;;;;
 
-(def bottom-left-key-position (key-position 1 cornerrow [(/ mount-width 2) (- (/ mount-height 2)) 0]))
-(def thumb-cluster-rot [0 0 0])
-(def thumb-cluster-move [-30 -20 10]) ; relative to bottom-left-key-position
+(def thumb-keys-rot [45 0 45]) ; all keys together
+(def thumb-keys-move [13 -18 -35]) ; all keys together, relative to bottom-left-key-position
+
+(def bottom-left-key-position (key-position 0 cornerrow [(- (/ mount-width 2)) (- (/ mount-height 2)) 0]))
+
+(defn move-shape [rot move shape]
+  (->> shape
+       (rotate (deg2rad (nth rot 2)) [0 0 1])
+       (rotate (deg2rad (nth rot 0)) [1 0 0])
+       (rotate (deg2rad (nth rot 1)) [0 1 0])
+       (translate move)
+  ))
 
 ; middle key has rot=0 mov=0. other keys are relative to that
 ; control the movement of the whole cluster with the constants above
 (defn thumb-place [rot move shape]
   (->> shape
-       (rotate (deg2rad (nth rot 0)) [1 0 0])
-       (rotate (deg2rad (nth rot 1)) [0 1 0])
-       (rotate (deg2rad (nth rot 2)) [0 0 1])
-       (translate move)
-       (rotate (deg2rad (nth thumb-cluster-rot 0)) [1 0 0])
-       (rotate (deg2rad (nth thumb-cluster-rot 1)) [0 1 0])
-       (rotate (deg2rad (nth thumb-cluster-rot 2)) [0 0 1])
-       (translate thumb-cluster-move)
+       (move-shape rot move)
+       (move-shape thumb-keys-rot thumb-keys-move)
+       (move-shape [0 0 0] bottom-left-key-position)
   ))
 
-(defn thumb-r-place [shape] (thumb-place [14 -40 10] [-15 -10 5] shape)) ; right
-(defn thumb-m-place [shape] (thumb-place [10 -23 20] [-33 -15 -6] shape)) ; middle
-(defn thumb-l-place [shape] (thumb-place [6 -5 35] [-52.5 -25.5 -11.5] shape)) ; left
+(defn thumb-r-place [shape] (thumb-place [0 -18 15] [23 3 5] shape)) ; right
+(defn thumb-m-place [shape] (thumb-place [0 0 5] [0 0 0] shape)) ; middle
+(defn thumb-l-place [shape] (thumb-place [0 18 -5] [-23 0 5] shape)) ; left
 
 (defn thumb-layout [shape]
   (union
@@ -600,7 +604,7 @@
 (def tb-bearing-diam 6)
 (def tb-bearing-length 2.5)
 (def tb-bearing-latitude (deg2rad 20))
-(def tb-sensor-latitude (deg2rad 80))
+(def tb-sensor-latitude (deg2rad 70))
 (def tb-sensor-hole-radius 3)
 (def tb-pcb-width 21)
 (def tb-pcb-length 28)
@@ -611,8 +615,8 @@
 (def tb-pcb-post-offset 1.75) ; center of post to edge of pcb
 (def tb-pcb-post-shelf-width 0.8)
 (def tb-sensor-holder-thickness 2)
-(def tb-rot [30 -30 0]) ; degrees
-(def tb-move [-50 10 10]) ; relative to bottom-left-key-position
+(def tb-rot [45 0 -90]) ; degrees
+(def tb-move [-10 -10 -15]) ; relative to bottom-left-key-position
 
 (def tb-radius (/ tb-diam 2))
 (def tb-outer-radius (+ tb-radius tb-clearance tb-shell-thickness))
@@ -659,12 +663,12 @@
     ; side wall
     (translate
       [
-        (/ tb-sensor-holder-thickness -2)
+        0
         (/ (+ tb-pcb-length tb-sensor-holder-thickness) 2)
         (/ (- tb-radius tb-ball-to-pcb-bottom tb-sensor-holder-thickness) 2)
       ]
       (cube
-        (+ tb-pcb-width tb-sensor-holder-thickness)
+        tb-pcb-width
         tb-sensor-holder-thickness
         (+ tb-radius tb-ball-to-pcb-bottom tb-sensor-holder-thickness)
       )
@@ -720,6 +724,11 @@
     (cylinder tb-sensor-hole-radius 100)
   ))
 
+(defn tb-place [shape]
+  (->> shape
+    (move-shape tb-rot tb-move)
+    (move-shape [0 0 0] bottom-left-key-position)
+  ))
 
 (def trackball-shell
   (->>
@@ -733,7 +742,7 @@
         (rotate [0 (- (deg2rad 90) tb-sensor-latitude) 0])
       )
     )
-    (thumb-place tb-rot tb-move)
+    (tb-place)
   ))
 
 (def trackball-void
@@ -750,14 +759,14 @@
       ; cut to bottom half of sphere
       (translate [0 0 100] (cylinder tb-outer-radius 200))
     )
-    (thumb-place tb-rot tb-move)
+    (tb-place)
   ))
 
 (def trackball-ball
   (->>
     (sphere tb-radius)
     (color [220/255 163/255 163/255 1])
-    (thumb-place tb-rot tb-move)
+    (tb-place)
   ))
 
 ;;;;;;;;;;;;;;
@@ -812,7 +821,7 @@
               (key-holes false)
               connectors
               (thumb false)
-              body-case
+              ; body-case
               trackball-shell
             )
             trackball-void
