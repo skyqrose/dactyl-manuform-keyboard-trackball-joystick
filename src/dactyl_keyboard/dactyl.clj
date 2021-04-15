@@ -608,15 +608,13 @@
 (def tb-eject-hole-latitude (deg2rad 60))
 (def tb-sensor-latitude (deg2rad 70))
 (def tb-sensor-hole-radius 3)
-(def tb-pcb-width 21)
-(def tb-pcb-length 28)
+(def tb-lens-length 21.15)
+(def tb-lens-width 18.85)
+(def tb-pcb-mount-hole-diam 3.8) ; diam of the insert, not the screw
+(def tb-pcb-mount-hole-distance 24.5) ; center to center between the holes
+(def tb-pcb-mount-hole-depth 6)
 (def tb-ball-to-lens 2.4)
 (def tb-lens-to-pcb 3.4)
-(def tb-pcb-thickness 1.6)
-(def tb-pcb-post-diam 2.4)
-(def tb-pcb-post-offset 1.75) ; center of post to edge of pcb
-(def tb-pcb-post-shelf-width 0.8)
-(def tb-sensor-holder-thickness 2)
 (def tb-rot [45 0 -90]) ; degrees
 (def tb-move [-10 -10 -15]) ; relative to bottom-left-key-position
 
@@ -626,8 +624,6 @@
 (def tb-bearing-radius (/ tb-bearing-diam 2))
 (def tb-bearing-longitudes (map deg2rad [0 120 240]))
 (def tb-bearing-center-radius (+ tb-radius tb-bearing-radius))
-(def tb-pcb-post-radius (/ tb-pcb-post-diam 2))
-(def tb-ball-to-pcb-bottom (+ tb-ball-to-lens tb-lens-to-pcb tb-pcb-thickness))
 
 (def tb-bearing-void
   (->>
@@ -667,70 +663,41 @@
     (rotate [0 (- (- (deg2rad 90) tb-eject-hole-latitude)) 0])
   ))
 
-(def tb-sensor-holder-side
+(def tb-sensor-mount
+  (let [
+    cylinder-height 100 ; height of the cylinder that the insert goes into. can be long and stick into the shell
+    z-offset (- (/ mount-height 2) tb-radius tb-ball-to-lens tb-lens-to-pcb) ; distance to shift the cylinders down so the touch the top of the pcb
+    screw-mount (cylinder (+ tb-shell-thickness (/ tb-pcb-mount-hole-diam 2)) mount-height)
+  ]
   (union
-    ; side wall
-    (translate
-      [
-        0
-        (/ (+ tb-pcb-length tb-sensor-holder-thickness) 2)
-        (/ (- tb-radius tb-ball-to-pcb-bottom tb-sensor-holder-thickness) 2)
-      ]
-      (cube
-        tb-pcb-width
-        tb-sensor-holder-thickness
-        (+ tb-radius tb-ball-to-pcb-bottom tb-sensor-holder-thickness)
-      )
-    )
-    ; shelf and connection to post
-    (translate
-      [
-        0
-        (/ (- (+ tb-pcb-length tb-sensor-holder-thickness) tb-pcb-post-offset (/ tb-pcb-post-diam 2) tb-pcb-post-shelf-width) 2)
-        (+ (/ tb-sensor-holder-thickness -2) (* -1 tb-ball-to-pcb-bottom))
-      ]
-      (cube
-        (+ (* 2 tb-pcb-post-shelf-width) tb-pcb-post-diam)
-        (+ tb-sensor-holder-thickness tb-pcb-post-offset (/ tb-pcb-post-diam 2) tb-pcb-post-shelf-width)
-        tb-sensor-holder-thickness
-      )
-    )
-    ; post
-    (translate
-      [
-        0
-        (- (/ tb-pcb-length 2) tb-pcb-post-offset)
-        (+ (/ tb-sensor-holder-thickness 2) (* -1 tb-ball-to-pcb-bottom))
-      ]
-      (cylinder tb-pcb-post-radius tb-pcb-thickness)
-    )
-  ))
+    (translate [0 (/ tb-pcb-mount-hole-distance 2) z-offset] screw-mount)
+    (translate [0 (/ tb-pcb-mount-hole-distance -2) z-offset] screw-mount)
+  )
+  )
+)
 
-(def tb-sensor-holder
+(def tb-sensor-mount-void
   (union
-    tb-sensor-holder-side
-    (mirror [0 1 0] tb-sensor-holder-side)
-    ; back wall
-    (translate
-      [
-        (/ (+ tb-pcb-width tb-sensor-holder-thickness) 2)
-        0
-        (/ (- tb-radius tb-ball-to-pcb-bottom tb-sensor-holder-thickness) 2)
-      ]
-      (cube
-        tb-sensor-holder-thickness
-        (+ tb-pcb-length (* 2 tb-sensor-holder-thickness))
-        (+ tb-radius tb-ball-to-pcb-bottom tb-sensor-holder-thickness)
-      )
+    ; slot for lens
+    (->>
+      (cube tb-lens-length tb-lens-width tb-lens-to-pcb)
+      (translate [0 0 (* -1 (+ tb-radius tb-ball-to-lens (/ tb-lens-to-pcb 2)))])
     )
-  ))
-
-(def tb-sensor-void
-  (union
-    (translate
-      [0 0 (+ (* -1 tb-ball-to-lens) (/ tb-lens-to-pcb -2) (/ tb-pcb-thickness 2))]
-      (cube tb-pcb-width tb-pcb-length (+ tb-pcb-thickness tb-lens-to-pcb)))
-    (cylinder tb-sensor-hole-radius 100)
+    ; hole for sensor to see through
+    (let [height (+ tb-radius tb-ball-to-lens tb-lens-to-pcb)] (->>
+      (cylinder tb-sensor-hole-radius height)
+      (translate [0 0 (/ height -2)])
+    ))
+    ; holes for the screw inserts
+    (let [
+      z-offset (- (/ tb-pcb-mount-hole-depth 2) tb-radius tb-ball-to-lens tb-lens-to-pcb) ; distance to shift the cylinders down so the touch the top of the pcb
+      screw-insert-void (cylinder (/ tb-pcb-mount-hole-diam 2) tb-pcb-mount-hole-depth)
+    ]
+    (union
+      (translate [0 (/ tb-pcb-mount-hole-distance 2) z-offset] screw-insert-void)
+      (translate [0 (/ tb-pcb-mount-hole-distance -2) z-offset] screw-insert-void)
+    )
+    )
   ))
 
 (defn tb-place [shape]
@@ -745,11 +712,7 @@
       (sphere tb-outer-radius)
       (union (for [longitude tb-bearing-longitudes]
          (rotate [0 0 longitude] tb-bearing-shell)))
-      (->>
-        tb-sensor-holder
-        (translate [0 0 (* -1 tb-radius)])
-        (rotate [0 (- (deg2rad 90) tb-sensor-latitude) 0])
-      )
+      (rotate [0 (- (deg2rad 90) tb-sensor-latitude) 0] tb-sensor-mount)
     )
     (tb-place)
   ))
@@ -760,11 +723,7 @@
       (sphere (+ tb-radius tb-clearance))
       (union (for [longitude tb-bearing-longitudes]
          (rotate [0 0 longitude] tb-bearing-void)))
-      (->>
-        tb-sensor-void
-        (translate [0 0 (* -1 tb-radius)])
-        (rotate [0 (- (deg2rad 90) tb-sensor-latitude) 0])
-      )
+      (rotate [0 (- (deg2rad 90) tb-sensor-latitude) 0] tb-sensor-mount-void)
       tb-eject-hole
       ; cut to bottom half of sphere
       (translate [0 0 100] (cylinder tb-outer-radius 200))
