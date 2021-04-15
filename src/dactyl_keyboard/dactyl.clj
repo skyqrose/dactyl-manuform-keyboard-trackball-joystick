@@ -590,24 +590,36 @@
 ;; Trackball ;;
 ;;;;;;;;;;;;;;;
 
-(def tb-radius 34)
+(def tb-diam 34)
 (def tb-clearance 0.5)
-(def tb-shell-thickness 4)
+(def tb-shell-thickness 3)
 (def tb-dowel-diam 3)
 (def tb-dowel-length 6)
 (def tb-bearing-diam 6)
 (def tb-bearing-length 2.5)
 (def tb-bearing-latitude (deg2rad 20))
-(def tb-sensor-hole-diam 4)
-(def tb-sensor-hole-latitude (deg2rad 4))
+(def tb-sensor-latitude (deg2rad 80))
+(def tb-sensor-hole-radius 3)
+(def tb-pcb-width 21)
+(def tb-pcb-length 28)
+(def tb-ball-to-lens 2.4)
+(def tb-lens-to-pcb 3.4)
+(def tb-pcb-thickness 1.6)
+(def tb-pcb-post-diam 2.4)
+(def tb-pcb-post-offset 1.75) ; center of post to edge of pcb
+(def tb-pcb-post-shelf-width 0.8)
+(def tb-sensor-holder-thickness 2)
 (def tb-rot [0 0 0])
 (def tb-move [-30 -20 10]) ; relative to bottom-left-key-position
 
+(def tb-radius (/ tb-diam 2))
 (def tb-outer-radius (+ tb-radius tb-clearance tb-shell-thickness))
 (def tb-dowel-radius (/ tb-dowel-diam 2))
 (def tb-bearing-radius (/ tb-bearing-diam 2))
 (def tb-bearing-longitudes (map deg2rad [0 120 240]))
 (def tb-bearing-center-radius (+ tb-radius tb-bearing-radius))
+(def tb-pcb-post-radius (/ tb-pcb-post-diam 2))
+(def tb-ball-to-pcb-bottom (+ tb-ball-to-lens tb-lens-to-pcb tb-pcb-thickness))
 
 (def tb-bearing-void
   (->>
@@ -640,19 +652,95 @@
     (rotate [0 tb-bearing-latitude 0])
   ))
 
+(def tb-sensor-holder-side
+  (union
+    ; side wall
+    (translate
+      [
+        (/ tb-sensor-holder-thickness -2)
+        (/ (+ tb-pcb-length tb-sensor-holder-thickness) 2)
+        (/ (- tb-radius tb-ball-to-pcb-bottom tb-sensor-holder-thickness) 2)
+      ]
+      (cube
+        (+ tb-pcb-width tb-sensor-holder-thickness)
+        tb-sensor-holder-thickness
+        (+ tb-radius tb-ball-to-pcb-bottom tb-sensor-holder-thickness)
+      )
+    )
+    ; shelf and connection to post
+    (translate
+      [
+        0
+        (/ (- (+ tb-pcb-length tb-sensor-holder-thickness) tb-pcb-post-offset (/ tb-pcb-post-diam 2) tb-pcb-post-shelf-width) 2)
+        (+ (/ tb-sensor-holder-thickness -2) (* -1 tb-ball-to-pcb-bottom))
+      ]
+      (cube
+        (+ (* 2 tb-pcb-post-shelf-width) tb-pcb-post-diam)
+        (+ tb-sensor-holder-thickness tb-pcb-post-offset (/ tb-pcb-post-diam 2) tb-pcb-post-shelf-width)
+        tb-sensor-holder-thickness
+      )
+    )
+    ; post
+    (translate
+      [
+        0
+        (- (/ tb-pcb-length 2) tb-pcb-post-offset)
+        (+ (/ tb-sensor-holder-thickness 2) (* -1 tb-ball-to-pcb-bottom))
+      ]
+      (cylinder tb-pcb-post-radius tb-pcb-thickness)
+    )
+  ))
+
+(def tb-sensor-holder
+  (union
+    tb-sensor-holder-side
+    (mirror [0 1 0] tb-sensor-holder-side)
+    ; back wall
+    (translate
+      [
+        (/ (+ tb-pcb-width tb-sensor-holder-thickness) 2)
+        0
+        (/ (- tb-radius tb-ball-to-pcb-bottom tb-sensor-holder-thickness) 2)
+      ]
+      (cube
+        tb-sensor-holder-thickness
+        (+ tb-pcb-length (* 2 tb-sensor-holder-thickness))
+        (+ tb-radius tb-ball-to-pcb-bottom tb-sensor-holder-thickness)
+      )
+    )
+  ))
+
+(def tb-sensor-void
+  (union
+    (translate
+      [0 0 (+ (* -1 tb-ball-to-lens) (/ tb-lens-to-pcb -2) (/ tb-pcb-thickness 2))]
+      (cube tb-pcb-width tb-pcb-length (+ tb-pcb-thickness tb-lens-to-pcb)))
+    (cylinder tb-sensor-hole-radius 100)
+  ))
+
+
 (def tb-shell
   (difference
     (union
-      (intersection ; cut sphere to bottom half
-        (sphere tb-outer-radius)
-        (translate [0 0 (/ tb-outer-radius -2)] (cylinder tb-outer-radius tb-outer-radius))
-      )
+      (sphere tb-outer-radius)
       (union (for [longitude tb-bearing-longitudes]
          (rotate [0 0 longitude] tb-bearing-shell)))
+      (->>
+        tb-sensor-holder
+        (translate [0 0 (* -1 tb-radius)])
+        (rotate [0 (- (deg2rad 90) tb-sensor-latitude) 0])
+      )
     )
     (sphere (+ tb-radius tb-clearance))
     (union (for [longitude tb-bearing-longitudes]
        (rotate [0 0 longitude] tb-bearing-void)))
+    (->>
+      tb-sensor-void
+      (translate [0 0 (* -1 tb-radius)])
+      (rotate [0 (- (deg2rad 90) tb-sensor-latitude) 0])
+    )
+    ; cut to bottom half of sphere
+    (translate [0 0 100] (cube 200 200 200))
   ))
 
 (def trackball tb-shell)
