@@ -604,6 +604,8 @@
 (def tb-bearing-diam 6)
 (def tb-bearing-length 2.5)
 (def tb-bearing-latitude (deg2rad 20))
+(def tb-eject-hole-diam 10)
+(def tb-eject-hole-latitude (deg2rad 60))
 (def tb-sensor-latitude (deg2rad 70))
 (def tb-sensor-hole-radius 3)
 (def tb-pcb-width 21)
@@ -656,6 +658,13 @@
     (translate [tb-bearing-center-radius 0 0])
     (rotate [(deg2rad 90) 0 0])
     (rotate [0 tb-bearing-latitude 0])
+  ))
+
+(def tb-eject-hole
+  (->>
+    (cylinder (/ tb-eject-hole-diam 2) (* 3 tb-shell-thickness))
+    (translate [0 0 (- tb-outer-radius)])
+    (rotate [0 (- (- (deg2rad 90) tb-eject-hole-latitude)) 0])
   ))
 
 (def tb-sensor-holder-side
@@ -756,6 +765,7 @@
         (translate [0 0 (* -1 tb-radius)])
         (rotate [0 (- (deg2rad 90) tb-sensor-latitude) 0])
       )
+      tb-eject-hole
       ; cut to bottom half of sphere
       (translate [0 0 100] (cylinder tb-outer-radius 200))
     )
