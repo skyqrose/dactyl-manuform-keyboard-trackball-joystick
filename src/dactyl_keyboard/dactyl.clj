@@ -779,13 +779,17 @@
     (move-shape [0 0 0] bottom-left-key-position)
   ))
 
+(def js-stick-top
+  (->>
+    (cylinder (/ js-stick-top-diam 2) js-stick-top-thickness)
+    (translate [0 0 (- js-stick-top-height (/ js-stick-top-thickness 2))])
+  )
+)
+
 (def joystick-stick
   (->>
     (union
-      (->>
-        (cylinder (/ js-stick-top-diam 2) js-stick-top-thickness)
-        (translate [0 0 (- js-stick-top-height (/ js-stick-top-thickness 2))])
-      )
+      js-stick-top
       (difference
         (sphere js-stick-ball-radius)
         (translate
@@ -801,13 +805,29 @@
     (js-place)
   ))
 
+; shows the stick top as far as it tilts in all directions
+(def joystick-stick-tilted
+  (->>
+    js-stick-top
+    (rotate (deg2rad js-stick-max-tilt) [1 0 0])
+    ((fn [shape]
+      (apply union
+        (for [angle [0 45 90 135 180 225 270 315]]
+          (rotate (deg2rad angle) [0 0 1] shape)
+        )
+      )
+    ))
+    (color [220/255 163/255 163/255 1])
+    (js-place)
+  ))
+
+
 (def joystick-plate
   (->>
     (cube 26 22 js-plate-thickness)
     (translate [-1 -1 0])
     ; remove pin holes
     ((fn [shape] (apply (partial difference shape)
-      ;[(cylinder js-plate-pin-hole-radius js-plate-thickness)]
       (for [[x y] js-plate-pin-hole-xys] (translate [x y 0] (cylinder js-plate-pin-hole-radius (+ js-plate-thickness 0.1))))
     )))
     (translate [0 0 (- 0 (/ js-plate-thickness 2) js-stick-core-bottom)])
@@ -877,6 +897,7 @@
           (union
             ;trackball-ball
             joystick-stick
+            joystick-stick-tilted
             caps
             thumbcaps
           )
