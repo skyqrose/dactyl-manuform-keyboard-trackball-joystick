@@ -739,6 +739,69 @@
   ))
 
 ;;;;;;;;;;;;;;
+;; Joystick ;;
+;;;;;;;;;;;;;;
+
+(def js-rot [0 0 0]) ; degrees
+(def js-move [0 0 0]) ; relative to bottom-left-key-position
+
+; origin is center of rotation of the stick
+(def js-stick-top-diam 17)
+(def js-stick-top-thickness 4)
+(def js-stick-top-height 21)
+(def js-stick-max-tilt 30)
+(def js-stick-ball-radius 13)
+(def js-stick-core-top 5)
+(def js-stick-core-bottom 6)
+
+(def js-plate-thickness 2)
+(def js-plate-pin-radius 0.5)
+(def js-plate-pin-holes [;list of xy
+  [8.8 2.4]
+  [8.8 0]
+  [8.8 -2.4]
+  [2.4 -8.8]
+  [0 -8.8]
+  [-2.4 -8.8]
+  [-5.1 -6.4]
+  [5.1 -6.4]
+  [-5.1 6.4]
+  [5.1 6.4]
+  [-10.1 3.3]
+  [-5.5 3.3]
+  [-10.1 -3.3]
+  [-5.5 -3.3]
+])
+
+(defn js-place [shape]
+  (->> shape
+    (move-shape js-rot js-move)
+    (move-shape [0 0 0] bottom-left-key-position)
+  ))
+
+(def joystick-stick
+  (->>
+    (union
+      (->>
+        (cylinder (/ js-stick-top-diam 2) js-stick-top-thickness)
+        (translate [0 0 (- js-stick-top-height (/ js-stick-top-thickness 2))])
+      )
+      (difference
+        (sphere js-stick-ball-radius)
+        (translate
+          [0 0 (/ js-stick-ball-radius -2)]
+          (cylinder (+ 1 js-stick-ball-radius) (* 2 js-stick-ball-radius))
+        )) ; cut off bottom 3/4 of sphere
+      (->>
+        (cube 22 18 (+ js-stick-core-top js-stick-core-bottom))
+        (translate [-1 -1 (/ (- js-stick-core-top js-stick-core-bottom) 2)])
+      )
+    )
+    (color [220/255 163/255 163/255 1])
+    (js-place)
+  ))
+
+;;;;;;;;;;;;;;
 ;; Assembly ;;
 ;;;;;;;;;;;;;;
 
@@ -790,12 +853,13 @@
               (key-holes false)
               connectors
               (thumb false)
-              ; body-case
-              trackball-shell
+              ;body-case
+              ;trackball-shell
             )
-            trackball-void
+            ;trackball-void
           )
-          trackball-ball
+          ;trackball-ball
+          joystick-stick
           caps
           thumbcaps
         )))
