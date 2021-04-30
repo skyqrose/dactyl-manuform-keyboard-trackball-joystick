@@ -742,8 +742,8 @@
 ;; Joystick ;;
 ;;;;;;;;;;;;;;
 
-(def js-rot [0 0 0]) ; degrees
-(def js-move [0 0 0]) ; relative to bottom-left-key-position
+(def js-rot [25 -14 25]) ; degrees
+(def js-move [-5 -1 -32]) ; relative to bottom-left-key-position
 
 ; origin is center of rotation of the stick
 (def js-stick-top-diam 17)
