@@ -512,8 +512,8 @@
 ;; Thumbs ;;
 ;;;;;;;;;;;;
 
-(def thumb-keys-rot [45 0 45]) ; all keys together
-(def thumb-keys-move [13 -18 -35]) ; all keys together, relative to bottom-left-key-position
+(def thumb-keys-rot [14 -20 25]) ; all keys together
+(def thumb-keys-move [6 -20 -40]) ; all keys together, relative to bottom-left-key-position
 
 (def bottom-left-key-position (key-position 0 cornerrow [(- (/ mount-width 2)) (- (/ mount-height 2)) 0]))
 
@@ -534,9 +534,9 @@
        (move-shape [0 0 0] bottom-left-key-position)
   ))
 
-(defn thumb-r-place [shape] (thumb-place [0 -18 15] [23 3 5] shape)) ; right
-(defn thumb-m-place [shape] (thumb-place [0 0 5] [0 0 0] shape)) ; middle
-(defn thumb-l-place [shape] (thumb-place [0 18 -5] [-23 0 5] shape)) ; left
+(defn thumb-r-place [shape] (thumb-place [3 -30 10] [25 3 5] shape)) ; right
+(defn thumb-m-place [shape] (thumb-place [0 0 0] [0 0 0] shape)) ; middle
+(defn thumb-l-place [shape] (thumb-place [0 30 -10] [-25 3 5] shape)) ; left
 
 (defn thumb-layout [shape]
   (union
@@ -615,8 +615,8 @@
 (def tb-pcb-mount-hole-depth 6)
 (def tb-ball-to-lens 2.4)
 (def tb-lens-to-pcb 3.4)
-(def tb-rot [45 0 -90]) ; degrees
-(def tb-move [-10 -10 -15]) ; relative to bottom-left-key-position
+(def tb-rot [45 -30 180]) ; degrees
+(def tb-move [-12 3 -23]) ; relative to bottom-left-key-position
 
 (def tb-radius (/ tb-diam 2))
 (def tb-outer-radius (+ tb-radius tb-clearance tb-shell-thickness))
