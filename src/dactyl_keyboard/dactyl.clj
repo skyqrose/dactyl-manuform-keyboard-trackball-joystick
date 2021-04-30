@@ -772,6 +772,18 @@
   [-10.1 -3.3]
   [-5.5 -3.3]
 ])
+(def js-plate-screw-hole-diam 2.5)
+(def js-plate-screw-hole-radius (/ js-plate-screw-hole-diam 2))
+(def js-plate-screw-insert-hole-diam 3.8)
+(def js-plate-screw-insert-hole-radius (/ js-plate-screw-insert-hole-diam 2))
+(def js-plate-screw-insert-thickness 2)
+(def js-plate-screw-insert-height 4)
+(def js-plate-screw-hole-xys [
+  [10 -10]
+  [10 8]
+  [-12 -10]
+  [-12 8]
+])
 
 (defn js-place [shape]
   (->> shape
@@ -824,11 +836,29 @@
 
 (def joystick-plate
   (->>
-    (cube 26 22 js-plate-thickness)
+    (cube 30 26 js-plate-thickness)
     (translate [-1 -1 0])
     ; remove pin holes
     ((fn [shape] (apply (partial difference shape)
-      (for [[x y] js-plate-pin-hole-xys] (translate [x y 0] (cylinder js-plate-pin-hole-radius (+ js-plate-thickness 0.1))))
+      (for [[x y] js-plate-pin-hole-xys]
+        (translate [x y 0] (cylinder js-plate-pin-hole-radius (+ js-plate-thickness 0.1)))
+      )
+    )))
+    ; add screw insert
+    ((fn [shape] (apply (partial union shape)
+      (for [[x y] js-plate-screw-hole-xys]
+        (translate
+          [x y (/ (+ js-plate-thickness js-plate-screw-insert-height) -2)]
+          (cylinder (+ js-plate-screw-insert-hole-radius js-plate-screw-insert-thickness) js-plate-screw-insert-height))
+      )
+    )))
+    ; remove screw insert voids
+    ((fn [shape] (apply (partial difference shape)
+      (for [[x y] js-plate-screw-hole-xys]
+        (translate
+          [x y (/ (+ js-plate-thickness js-plate-screw-insert-height) -2)]
+          (cylinder js-plate-screw-insert-hole-radius js-plate-screw-insert-height))
+      )
     )))
     (translate [0 0 (- 0 (/ js-plate-thickness 2) js-stick-core-bottom)])
     (js-place)
