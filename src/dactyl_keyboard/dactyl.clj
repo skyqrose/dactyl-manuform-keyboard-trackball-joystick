@@ -755,8 +755,8 @@
 (def js-stick-core-bottom 6)
 
 (def js-plate-thickness 2)
-(def js-plate-pin-radius 0.5)
-(def js-plate-pin-holes [;list of xy
+(def js-plate-pin-hole-radius 0.5)
+(def js-plate-pin-hole-xys [
   [8.8 2.4]
   [8.8 0]
   [8.8 -2.4]
@@ -798,6 +798,19 @@
       )
     )
     (color [220/255 163/255 163/255 1])
+    (js-place)
+  ))
+
+(def joystick-plate
+  (->>
+    (cube 26 22 js-plate-thickness)
+    (translate [-1 -1 0])
+    ; remove pin holes
+    ((fn [shape] (apply (partial difference shape)
+      ;[(cylinder js-plate-pin-hole-radius js-plate-thickness)]
+      (for [[x y] js-plate-pin-hole-xys] (translate [x y 0] (cylinder js-plate-pin-hole-radius (+ js-plate-thickness 0.1))))
+    )))
+    (translate [0 0 (- 0 (/ js-plate-thickness 2) js-stick-core-bottom)])
     (js-place)
   ))
 
@@ -848,6 +861,7 @@
 (spit "things/test.scad"
       (write-scad
         (union
+          ; main body
           (difference
             (union
               (key-holes false)
@@ -858,10 +872,14 @@
             )
             ;trackball-void
           )
-          ;trackball-ball
-          joystick-stick
-          caps
-          thumbcaps
+          joystick-plate
+          ; other part models
+          (union
+            ;trackball-ball
+            joystick-stick
+            caps
+            thumbcaps
+          )
         )))
 
 (spit "things/right.scad"
